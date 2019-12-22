@@ -20,6 +20,10 @@ import (
 
 func main(){
   ncache := InitNearCache()
+  ncache.OnDelete = func () (interface{}, error) {
+     fmt.Println("element were deleted")
+     return nil, nil
+  }
   ncache.Add("key", "value", time.Second * 10)
   v, e := ncache.Get("key")    
   if e == nil {
@@ -33,11 +37,11 @@ func main(){
 ### Future work
 
 - [x] basic operations (Get, Add, Refresh, Del, Expire)
+- [ ] elements events (using bus events)
 - [ ] add testing options
 - [ ] evict functions
 - [ ] notifications
 - [ ] stats
-- [ ] redis support (pub/sub)
-- [ ] sync with others clients (using ae-net-prot 1.0)
+- [ ] cache support (pub/sub)
 
 
