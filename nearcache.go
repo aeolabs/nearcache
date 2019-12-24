@@ -74,8 +74,6 @@ func (n *NearCache) GetAndRefresh(key string) (interface{}, error) {
 }
 
 func (n *NearCache) get(key string) (*cacheitem, error) {
-	n.mux.Lock()
-	defer n.mux.Unlock()
 	v := n.items[key]
 	if v == nil {
 		return nil, ErrNoExists
@@ -83,7 +81,7 @@ func (n *NearCache) get(key string) (*cacheitem, error) {
 	if v.expire > time.Now().UnixNano() {
 		return v, nil
 	} else {
-		delete(n.items, key)
+		n.cleanItem(key)
 		return nil, ErrExpire
 	}
 
@@ -115,14 +113,12 @@ func (n *NearCache) Del(key string) error {
 }
 
 func (n *NearCache) del(key string) error {
-	n.mux.Lock()
-	defer n.mux.Unlock()
 	v := n.items[key]
 	if v == nil {
 		return ErrNoExists
 	}
 	n.doCommand(OnDeleteEvt)
-	delete(n.items, key)
+	n.cleanItem(key)
 	return nil
 }
 
@@ -159,6 +155,12 @@ func (n *NearCache) update(key string, value interface{}) (interface{}, error) {
 	v.expire = time.Now().Add(v.duration).UnixNano()
 	n.doCommand(OnUpdateEvt)
 	return value, nil
+}
+
+func (n *NearCache) cleanItem(key string) {
+	n.mux.Lock()
+	delete(n.items, key)
+	n.mux.Unlock()
 }
 
 // Clean all the items into cache

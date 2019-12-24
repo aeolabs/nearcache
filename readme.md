@@ -12,6 +12,8 @@ Any kind of object can be stored into the cache, and can personalize the duratio
 ### Usage
 
 ```go
+package main
+
 import (
   "fmt"
   "github.com/aeolabs/nearcache"
@@ -28,6 +30,7 @@ func main(){
   v, e := ncache.Get("key")    
   if e == nil {
      fmt.Printf("Cache value [%s]\n", v)
+     ncache.Del("key") //this line should print "element were deleted"
   } else{
   	 fmt.Println("error")
   }
