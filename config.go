@@ -22,32 +22,53 @@ package nearcache
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE
 
-import (
-	"time"
+import "errors"
+
+type Config struct {
+	OnDelete  event
+	OnUpdate  event
+	OnAdd     event
+	OnRefresh event
+	OnExpire  event
+}
+
+type EventType int
+
+const (
+	OnDeleteEvt EventType = iota
+	OnRefershEvt
+	OnAddEvt
+	OnUpdateEvt
+	OnExpireEvt
 )
 
-type Cacheitem struct {
-	Value    interface{}
-	expire   int64
-	duration time.Duration
-	config   *Config
-}
-
-func (c *Cacheitem) Expired() (bool, error) {
-	expired := c.expire > time.Now().UnixNano()
-	if expired {
-		c.config.doCommand(OnExpireEvt, c)
+func (cf *Config) doCommand(evt EventType, item *Cacheitem) (interface{}, error) {
+	switch evt {
+	case OnAddEvt:
+		if cf.OnAdd != nil {
+			return cf.OnAdd(item)
+		}
+		break
+	case OnDeleteEvt:
+		if cf.OnDelete != nil {
+			return cf.OnDelete(item)
+		}
+		break
+	case OnRefershEvt:
+		if cf.OnRefresh != nil {
+			return cf.OnDelete(item)
+		}
+		break
+	case OnUpdateEvt:
+		if cf.OnUpdate != nil {
+			return cf.OnRefresh(item)
+		}
+		break
+	case OnExpireEvt:
+		if cf.OnExpire != nil {
+			return cf.OnExpire(item)
+		}
+		break
 	}
-	return expired, nil
-}
-
-func (c *Cacheitem) refersh() {
-	c.expire = time.Now().Add(c.duration).UnixNano()
-	c.config.doCommand(OnRefershEvt, c)
-}
-
-func (c *Cacheitem) update(value interface{}) *Cacheitem {
-	c.Value = value
-	c.config.doCommand(OnUpdateEvt, c)
-	return c
+	return nil, errors.New("no events where defined")
 }
