@@ -65,6 +65,7 @@ func InitWithConfig(cfg *Config) *NearCache {
 // Add a new item to the map, this value must be usage with duration
 func (n *NearCache) Add(key string, value interface{}, duration time.Duration) error {
 	n.mux.Lock()
+	defer n.mux.Unlock()
 	v := &Cacheitem{
 		Value:    value,
 		expire:   time.Now().Add(duration).UnixNano(),
@@ -72,7 +73,6 @@ func (n *NearCache) Add(key string, value interface{}, duration time.Duration) e
 	}
 	n.items[key] = v
 	n.config.doCommand(OnAddEvt, v)
-	n.mux.Unlock()
 	return nil
 }
 
@@ -142,6 +142,8 @@ func (n *NearCache) Del(key string) error {
 }
 
 func (n *NearCache) del(key string) error {
+	n.mux.Lock()
+	defer n.mux.Unlock()
 	v := n.items[key]
 	if v == nil {
 		return ErrNoExists
@@ -184,13 +186,13 @@ func (n *NearCache) update(key string, value interface{}) (*Cacheitem, error) {
 
 func (n *NearCache) cleanItem(key string) {
 	n.mux.Lock()
+	defer n.mux.Unlock()
 	delete(n.items, key)
-	n.mux.Unlock()
 }
 
 // Clean all the items into cache
 func (n *NearCache) Clean() {
 	n.mux.Lock()
+	defer n.mux.Unlock()
 	n.items = make(map[string]*Cacheitem)
-	n.mux.Unlock()
 }
