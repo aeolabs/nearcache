@@ -34,12 +34,17 @@ func main(){
   } else{
   	 fmt.Println("error")
   }
+  
+  items := ncache.Count()
+  fmt.Println(items)
+  
 }
 ```
 
 ### Future work
 
 - [x] basic operations (Get, Add, Refresh, Del, Expire)
+- [x] count elements
 - [ ] elements events (using bus events)
 - [ ] add testing options
 - [ ] evict functions

@@ -196,3 +196,10 @@ func (n *NearCache) Clean() {
 	defer n.mux.Unlock()
 	n.items = make(map[string]*Cacheitem)
 }
+
+func (m *NearCache) Count() int {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+	i := len(m.items)
+	return i
+}

@@ -84,3 +84,11 @@ func TestHasItem(t *testing.T) {
 	has := ncache.Has(key)
 	assert.Equal(t, has, true, "the elements is not in the cache")
 }
+
+func TestCountItems(t *testing.T) {
+	ncache := Init()
+	key := "test"
+	ncache.Add(key, "value", time.Second*10)
+	count := ncache.Count()
+	assert.Equal(t, 1, count, "No elements")
+}
