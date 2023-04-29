@@ -48,27 +48,22 @@ func (cf *Config) doCommand(evt EventType, item *Cacheitem) (interface{}, error)
 		if cf.OnAdd != nil {
 			return cf.OnAdd(item)
 		}
-		break
 	case OnDeleteEvt:
 		if cf.OnDelete != nil {
 			return cf.OnDelete(item)
 		}
-		break
 	case OnRefershEvt:
 		if cf.OnRefresh != nil {
 			return cf.OnDelete(item)
 		}
-		break
 	case OnUpdateEvt:
 		if cf.OnUpdate != nil {
 			return cf.OnRefresh(item)
 		}
-		break
 	case OnExpireEvt:
 		if cf.OnExpire != nil {
 			return cf.OnExpire(item)
 		}
-		break
 	}
 	return nil, errors.New("no events where defined")
 }
