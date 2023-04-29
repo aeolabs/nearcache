@@ -2,7 +2,7 @@ package nearcache
 
 //	MIT License
 //
-//	Copyright (c) Aeolabs SPA. All rights reserved.
+//	Copyright (c) Aeolabs SRL. All rights reserved.
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal

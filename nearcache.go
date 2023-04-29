@@ -2,7 +2,7 @@ package nearcache
 
 //	MIT License
 //
-//	Copyright (c) Aeolabs SPA. All rights reserved.
+//	Copyright (c) Aeolabs SRL. All rights reserved.
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-//If it is usage in cache item, at this point is posible to know each value
+// If it is usage in cache item, at this point is posible to know each value
 type event = func(item *Cacheitem) (interface{}, error)
 
 type NearCache struct {
@@ -42,7 +42,7 @@ var (
 	ErrExpire   = errors.New("item has been expired")
 )
 
-//InitNearCache a simple nearcache without configuration parameters
+// InitNearCache a simple nearcache without configuration parameters
 // ncache := nearcache.InitNearCache()
 // ncache.Add("v1", "v1", time.Seconds * 5)
 // item := ncache.Get("v1")
@@ -76,7 +76,7 @@ func (n *NearCache) Add(key string, value interface{}, duration time.Duration) e
 	return nil
 }
 
-//Get value from cache, if the item is expire or does not exists, this return an error
+// Get value from cache, if the item is expire or does not exists, this return an error
 func (n *NearCache) Get(key string) (*Cacheitem, error) {
 	citem, err := n.get(key)
 	if err != nil {
@@ -85,7 +85,7 @@ func (n *NearCache) Get(key string) (*Cacheitem, error) {
 	return citem, nil
 }
 
-//Get Item and then expire
+// Get Item and then expire
 func (n *NearCache) GetAndExpire(key string) (*Cacheitem, error) {
 	v, e := n.get(key)
 	if e == nil {
@@ -96,7 +96,7 @@ func (n *NearCache) GetAndExpire(key string) (*Cacheitem, error) {
 	return v, nil
 }
 
-//Get item and refresh the expiration time
+// Get item and refresh the expiration time
 func (n *NearCache) GetAndRefresh(key string) (*Cacheitem, error) {
 	return n.refresh(key)
 }
@@ -120,7 +120,7 @@ func (n *NearCache) Has(key string) bool {
 	return ok
 }
 
-//Determine if the value in the cache is expired or not
+// Determine if the value in the cache is expired or not
 // if the value is expired this return true, otherwise false
 func (n *NearCache) Expired(key string) (bool, error) {
 	return n.expire(key)
@@ -136,7 +136,7 @@ func (n *NearCache) expire(key string) (bool, error) {
 	return v.Expired()
 }
 
-//Delete the item from cache if its exists.
+// Delete the item from cache if its exists.
 func (n *NearCache) Del(key string) error {
 	return n.del(key)
 }
@@ -153,7 +153,7 @@ func (n *NearCache) del(key string) error {
 	return nil
 }
 
-//Refresh item into cache using configuration when this were added
+// Refresh item into cache using configuration when this were added
 func (n *NearCache) Refresh(key string) (*Cacheitem, error) {
 	return n.refresh(key)
 }
@@ -169,7 +169,7 @@ func (n *NearCache) refresh(key string) (*Cacheitem, error) {
 	return v, nil
 }
 
-//Update items into cache and return new value
+// Update items into cache and return new value
 func (n *NearCache) Update(key string, value interface{}) (*Cacheitem, error) {
 	return n.update(key, value)
 }
@@ -185,8 +185,6 @@ func (n *NearCache) update(key string, value interface{}) (*Cacheitem, error) {
 }
 
 func (n *NearCache) cleanItem(key string) {
-	n.mux.Lock()
-	defer n.mux.Unlock()
 	delete(n.items, key)
 }
 
