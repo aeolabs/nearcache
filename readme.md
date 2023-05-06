@@ -1,3 +1,5 @@
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/aeolabs/nearcache)](https://github.com/aeolabs/nearcache/releases)
+
 # nearcache
 
 nearcache is an in-memory key:value cache, this run in the golang environment using the same memory that program whitch 
