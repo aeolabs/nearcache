@@ -25,16 +25,25 @@ package nearcache
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-// If it is usage in cache item, at this point is posible to know each value
+// If it is usage in cache item, at this point is possible to know each value
 type event = func(item *Cacheitem) (interface{}, error)
+
+type Stats struct {
+	calls  uint64
+	misses uint64
+	added  uint64
+	items  uint64
+}
 
 type NearCache struct {
 	mux    sync.Mutex
 	items  map[string]*Cacheitem
 	config *Config
+	stats  *Stats
 }
 
 var (
@@ -42,16 +51,23 @@ var (
 	ErrExpire   = errors.New("item has been expired")
 )
 
-// InitNearCache a simple nearcache without configuration parameters
+// Init InitNearCache a simple nearcache without configuration parameters
 // ncache := nearcache.InitNearCache()
 // ncache.Add("v1", "v1", time.Seconds * 5)
 // item := ncache.Get("v1")
 // fmt.println(item)
 func Init() *NearCache {
 	cfg := &Config{}
+
 	return &NearCache{
 		items:  make(map[string]*Cacheitem),
 		config: cfg,
+		stats: &Stats{
+			calls:  0,
+			misses: 0,
+			added:  0,
+			items:  0,
+		},
 	}
 }
 
@@ -59,6 +75,12 @@ func InitWithConfig(cfg *Config) *NearCache {
 	return &NearCache{
 		items:  make(map[string]*Cacheitem),
 		config: cfg,
+		stats: &Stats{
+			calls:  0,
+			misses: 0,
+			added:  0,
+			items:  0,
+		},
 	}
 }
 
@@ -73,6 +95,7 @@ func (n *NearCache) Add(key string, value interface{}, duration time.Duration) e
 	}
 	n.items[key] = v
 	n.config.doCommand(OnAddEvt, v)
+	atomic.AddUint64(&n.stats.added, 1)
 	return nil
 }
 
@@ -85,7 +108,7 @@ func (n *NearCache) Get(key string) (*Cacheitem, error) {
 	return citem, nil
 }
 
-// Get Item and then expire
+// GetAndExpire Get Item and then expire
 func (n *NearCache) GetAndExpire(key string) (*Cacheitem, error) {
 	v, e := n.get(key)
 	if e == nil {
@@ -96,7 +119,7 @@ func (n *NearCache) GetAndExpire(key string) (*Cacheitem, error) {
 	return v, nil
 }
 
-// Get item and refresh the expiration time
+// GetAndRefresh Get item and refresh the expiration time
 func (n *NearCache) GetAndRefresh(key string) (*Cacheitem, error) {
 	return n.refresh(key)
 }
@@ -104,15 +127,17 @@ func (n *NearCache) GetAndRefresh(key string) (*Cacheitem, error) {
 func (n *NearCache) get(key string) (*Cacheitem, error) {
 	v := n.items[key]
 	if v == nil {
+		atomic.AddUint64(&n.stats.misses, 1)
 		return nil, ErrNoExists
 	}
 	if v.expire > time.Now().UnixNano() {
+		atomic.AddUint64(&n.stats.calls, 1)
 		return v, nil
 	} else {
 		n.cleanItem(key)
+		atomic.AddUint64(&n.stats.misses, 1)
 		return nil, ErrExpire
 	}
-
 }
 
 func (n *NearCache) Has(key string) bool {
@@ -120,7 +145,7 @@ func (n *NearCache) Has(key string) bool {
 	return ok
 }
 
-// Determine if the value in the cache is expired or not
+// Expired Determine if the value in the cache is expired or not
 // if the value is expired this return true, otherwise false
 func (n *NearCache) Expired(key string) (bool, error) {
 	return n.expire(key)
@@ -136,7 +161,7 @@ func (n *NearCache) expire(key string) (bool, error) {
 	return v.Expired()
 }
 
-// Delete the item from cache if its exists.
+// Del Delete the item from cache if its exists.
 func (n *NearCache) Del(key string) error {
 	return n.del(key)
 }
@@ -186,6 +211,7 @@ func (n *NearCache) update(key string, value interface{}) (*Cacheitem, error) {
 
 func (n *NearCache) cleanItem(key string) {
 	delete(n.items, key)
+	atomic.AddUint64(&n.stats.items, -1)
 }
 
 // Clean all the items into cache
@@ -193,11 +219,16 @@ func (n *NearCache) Clean() {
 	n.mux.Lock()
 	defer n.mux.Unlock()
 	n.items = make(map[string]*Cacheitem)
+	n.stats.items = 0
 }
 
-func (m *NearCache) Count() int {
-	m.mux.Lock()
-	defer m.mux.Unlock()
-	i := len(m.items)
-	return i
+func (n *NearCache) Count() uint64 {
+	n.mux.Lock()
+	defer n.mux.Unlock()
+	return n.stats.items
+}
+
+// Statics Get stats about cache
+func (n *NearCache) Statics() *Stats {
+	return n.stats
 }

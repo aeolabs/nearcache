@@ -49,7 +49,7 @@ func main(){
 - [ ] add testing options
 - [ ] evict functions
 - [ ] notifications
-- [ ] stats
+- [x] stats
 - [ ] cache support (pub/sub)
 
 
