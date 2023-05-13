@@ -92,3 +92,22 @@ func TestCountItems(t *testing.T) {
 	count := ncache.Count()
 	assert.Equal(t, 1, count, "No elements")
 }
+
+func TestStats(t *testing.T) {
+	ncache := Init()
+	ncache.Add("test", "value", time.Second*10)
+	ncache.Add("test1", "value", time.Second*10)
+	ncache.Add("test2", "value", time.Second*10)
+	ncache.Add("test3", "value", time.Second*10)
+	statics := ncache.Statics()
+
+	t.Log("number of elements ", statics.Items)
+
+	assert.NotEqual(t, statics.Items, 1)
+
+	ncache.Del("test")
+
+	t.Log("number of elements ", statics.Items)
+
+	assert.NotEqual(t, statics.Items, 3)
+}

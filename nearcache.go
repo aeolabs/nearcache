@@ -33,10 +33,10 @@ import (
 type event = func(item *Cacheitem) (interface{}, error)
 
 type Stats struct {
-	calls  uint64
-	misses uint64
-	added  uint64
-	items  uint64
+	Calls  uint64
+	Misses uint64
+	Added  uint64
+	Items  uint64
 }
 
 type NearCache struct {
@@ -63,10 +63,10 @@ func Init() *NearCache {
 		items:  make(map[string]*Cacheitem),
 		config: cfg,
 		stats: &Stats{
-			calls:  0,
-			misses: 0,
-			added:  0,
-			items:  0,
+			Calls:  0,
+			Misses: 0,
+			Added:  0,
+			Items:  0,
 		},
 	}
 }
@@ -76,10 +76,10 @@ func InitWithConfig(cfg *Config) *NearCache {
 		items:  make(map[string]*Cacheitem),
 		config: cfg,
 		stats: &Stats{
-			calls:  0,
-			misses: 0,
-			added:  0,
-			items:  0,
+			Calls:  0,
+			Misses: 0,
+			Added:  0,
+			Items:  0,
 		},
 	}
 }
@@ -95,7 +95,8 @@ func (n *NearCache) Add(key string, value interface{}, duration time.Duration) e
 	}
 	n.items[key] = v
 	n.config.doCommand(OnAddEvt, v)
-	atomic.AddUint64(&n.stats.added, 1)
+	atomic.AddUint64(&n.stats.Added, 1)
+	atomic.AddUint64(&n.stats.Items, 1)
 	return nil
 }
 
@@ -127,15 +128,15 @@ func (n *NearCache) GetAndRefresh(key string) (*Cacheitem, error) {
 func (n *NearCache) get(key string) (*Cacheitem, error) {
 	v := n.items[key]
 	if v == nil {
-		atomic.AddUint64(&n.stats.misses, 1)
+		atomic.AddUint64(&n.stats.Misses, 1)
 		return nil, ErrNoExists
 	}
 	if v.expire > time.Now().UnixNano() {
-		atomic.AddUint64(&n.stats.calls, 1)
+		atomic.AddUint64(&n.stats.Calls, 1)
 		return v, nil
 	} else {
 		n.cleanItem(key)
-		atomic.AddUint64(&n.stats.misses, 1)
+		atomic.AddUint64(&n.stats.Misses, 1)
 		return nil, ErrExpire
 	}
 }
@@ -178,7 +179,7 @@ func (n *NearCache) del(key string) error {
 	return nil
 }
 
-// Refresh item into cache using configuration when this were added
+// Refresh item into cache using configuration when this were Added
 func (n *NearCache) Refresh(key string) (*Cacheitem, error) {
 	return n.refresh(key)
 }
@@ -194,7 +195,7 @@ func (n *NearCache) refresh(key string) (*Cacheitem, error) {
 	return v, nil
 }
 
-// Update items into cache and return new value
+// Update Items into cache and return new value
 func (n *NearCache) Update(key string, value interface{}) (*Cacheitem, error) {
 	return n.update(key, value)
 }
@@ -211,21 +212,21 @@ func (n *NearCache) update(key string, value interface{}) (*Cacheitem, error) {
 
 func (n *NearCache) cleanItem(key string) {
 	delete(n.items, key)
-	atomic.AddUint64(&n.stats.items, -1)
+	n.stats.Items = uint64(len(n.items))
 }
 
-// Clean all the items into cache
+// Clean all the Items into cache
 func (n *NearCache) Clean() {
 	n.mux.Lock()
 	defer n.mux.Unlock()
 	n.items = make(map[string]*Cacheitem)
-	n.stats.items = 0
+	n.stats.Items = 0
 }
 
 func (n *NearCache) Count() uint64 {
 	n.mux.Lock()
 	defer n.mux.Unlock()
-	return n.stats.items
+	return n.stats.Items
 }
 
 // Statics Get stats about cache

@@ -53,5 +53,6 @@ func main(){
 - [ ] notifications
 - [x] stats
 - [ ] cache support (pub/sub)
+- [ ] atomic operations
 
 
